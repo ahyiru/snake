@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>snake</title>
+	<meta charset="utf-8">
+	<style>
+		*{margin:0;padding:0;}
+		body{width:100%;min-height:100%;}
+		.t{
+			background:#eee;
+			overflow:auto;
+		}
+		.title{
+			margin:30px auto 0 auto;
+			width:60%;
+			overflow:auto;
+		}
+		.pr{float:right;}
+		.pr span{color:red;}
+		.title>p{
+			padding:5px;
+		}
+		.mybt{
+			display:block;
+			margin:30px auto;
+			height:30px;
+			width:60px;
+			background:#6f0;
+			font-size:16px;
+		}
+		.myt{
+			border-collapse:collapse;
+			border-spacing:0;
+			margin:20px auto 30px auto;
+		}
+		td{
+			border:1px solid #333;
+			padding:12px;
+		}
+		.header{
+			background:red;
+		}
+		.food{
+			background:green;
+		}
+		.body{
+			background:#f60;
+		}
+		.myh{background:#333;}
+	</style>
+</head>
+<body>
+<div class="t">
+<button class="mybt">开始 </button>
+<div class="title">
+	<p class="pr">得分: <span>0</span></p>
+	<div class="sp">游戏说明：方向键调整方向，空格暂停。
+		<input type="radio" name="sp" value="1"> 慢
+		<input type="radio" name="sp" value="2" checked> 中
+		<input type="radio" name="sp" value="3"> 快
+	</div>
+</div>
+<table class="myt"></table>
+</div>
+
+<script src="//cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+<script>
+	$(function(){
+		var h=20,w=36;
+		var ter=100;
+		var tr,td,trf=[0,0],tdf=[0,0];
+		// draw table
+		var tb='';
+		for(var i=0;i<h;i++){
+			var td='';
+			for(var j=0;j<w;j++){
+				td+='<td></td>';
+			}
+			tb+='<tr>'+td+'</tr>'
+		}
+		$('.myt').append(tb);
+		// end draw table
+
+		var sbody=2;
+
+		// start init
+		var rd=function(){
+			tr=~~(Math.random()*h),
+			td=~~(Math.random()*w/2+3);
+			var s=$('.myt tr:eq('+tr+') td:eq('+td+')');
+			if(s.hasClass('header')) rd();
+			else{
+				s.addClass('header myh');
+				for(var i=0;i<sbody;i++){
+					trf[i]=tr-0;
+					tdf[i]=td-(sbody-i);
+					$('.myt tr:eq('+trf[i]+') td:eq('+tdf[i]+')').addClass('header');
+				}
+				//$('.myt tr:eq('+tr+') td:eq('+(td-1)+')').addClass('header');
+				//$('.myt tr:eq('+tr+') td:eq('+(td-2)+')').addClass('header');
+			}
+		}
+		//rd();
+		// end init
+
+		var start=function(){
+
+		}
+		// snakebody.length
+		var step=function(h,w){
+			$('.myt tr:eq('+h+') td:eq('+w+')').addClass('header');
+		}
+		var rm=function(h,w){
+			$('.myt tr:eq('+h+') td:eq('+w+')').removeClass('header');
+		}
+		var cl=function(){
+			for(var i=0;i<h;i++){
+				for(var j=0;j<w;j++){
+					$('.myt tr:eq('+i+') td:eq('+j+')').removeClass();
+				}
+			}
+		}
+		var food=function(){
+			var fdr=~~(Math.random()*h),
+				fdd=~~(Math.random()*w);
+			var s=$('.myt tr:eq('+fdr+') td:eq('+fdd+')');
+			if(s.hasClass('header')) food();
+			else s.addClass('food');
+		}
+		var move=function(){
+			for(var i=0;i<h;i++){
+				for(var j=0;j<w;j++){
+					$('.myt tr:eq('+i+') td:eq('+j+')').removeClass('myh');
+				}
+			}
+			var rf=trf[0],
+				df=tdf[0];
+			for(var i=0;i<sbody-1;i++){
+				trf[i]=trf[i+1];
+				tdf[i]=tdf[i+1];
+			}
+			trf[sbody-1]=tr;
+			tdf[sbody-1]=td;
+			switch(cKey){
+				case 37:
+					td-=1;
+					break;
+				case 38:
+					tr-=1;
+					break;
+				case 39:
+					td+=1;
+					break;
+				case 40:
+					tr+=1;
+					break;
+			}
+			var hd=$('.myt tr:eq('+tr+') td:eq('+td+')');
+			hd.addClass('myh');
+			if(hd.hasClass('food')){
+				hd.removeClass('food');
+				food();
+				sbody++;
+				$('.pr span').text(sbody-2);
+			}
+			var bl=hd.hasClass('header');
+			if(tr<0||tr>=h||td<0||td>=w||bl){
+				if(bl) alert('自残而死，呵呵！');
+				else alert('你挂了，骚年！');
+				clearInterval(st);
+				$('.mybt').attr('disabled',false);
+				$('.sp input').attr('disabled',false);
+				return false;
+			}
+			else{
+				rm(rf,df);
+				step(tr,td);
+			}
+		}
+		// var st=setInterval(move,ter);
+		var st;
+		$('.mybt').on('click',function(){
+			var chk=$('.sp input:radio:checked').val();
+			if(chk==1) ter=300;
+			else if(chk==2) ter=200;
+			else ter=100;
+			sbody=2;
+			cl();
+			rd();
+			food();
+			cKey=39;
+			st=setInterval(move,ter);
+			$(this).attr('disabled',true);
+			$('.sp input').attr('disabled',true);
+			$('.pr span').text('0');
+		})
+
+		var cKey=0,pause=-1;
+		var ctrl=function(e){
+			var e=e||window.event;
+			var eKey=e.keyCode||e.which||e.charCode;
+			if(eKey>36&&eKey<41&&eKey!=cKey&&Math.abs(eKey-cKey)!=2&&pause==-1){
+				cKey=eKey;
+			}
+			else if(eKey==32){
+				if(pause==0){
+					pause=-1;
+					st=setInterval(move,ter);
+				}
+				else{
+					pause=0;
+					clearInterval(st);
+				}
+			}
+		}
+		document.onkeydown=ctrl;
+
+	})
+</script>
+</body>
+</html>
